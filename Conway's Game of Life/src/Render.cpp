@@ -32,5 +32,9 @@ void DrawRectangle(float x, float y, float sizeX, float sizeY)
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 6, indices, GL_STATIC_DRAW);
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+
+    glDeleteBuffers(1, &vb);
+    glDeleteBuffers(1, &ib);
+    glDeleteVertexArrays(1, &vao);
     
 }

@@ -2,9 +2,59 @@
 #include <GLFW/glfw3.h>
 
 #include "Grid.h"
+#include "Render.h"
 #include "helper/Shader.h"
 
 #include <iostream>
+#include <random>
+#include <Windows.h>
+
+int nowRenderingGrid = 1;
+
+const unsigned int GRID_WIDTH = 144, GRID_HEIGHT = 144;
+const unsigned int SCREEN_WIDTH = 720, SCREEN_HEIGHT = 720;
+
+double mousePositionX;
+double mousePositionY;
+
+Grid Grid1(GRID_WIDTH, GRID_HEIGHT);
+Grid Grid2(GRID_WIDTH, GRID_HEIGHT);
+    
+
+void mouse_pos_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    mousePositionX = xpos; mousePositionY = ypos;
+}
+
+void mouse_click_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    {
+        unsigned int gridPosX = floorf(mousePositionX * GRID_WIDTH/ SCREEN_WIDTH);
+        unsigned int gridPosY = floorf(mousePositionY * GRID_HEIGHT / SCREEN_HEIGHT);
+
+        if(nowRenderingGrid == 1)
+        Grid1.SetCell(gridPosX, gridPosY, true);
+        else
+        Grid2.SetCell(gridPosX, gridPosY, true);
+    }
+    else if(button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+    {
+        unsigned int gridPosX = floorf(mousePositionX * GRID_WIDTH/ SCREEN_WIDTH);
+        unsigned int gridPosY = floorf(mousePositionY * GRID_HEIGHT / SCREEN_HEIGHT);
+
+        if (nowRenderingGrid == 1)
+            Grid1.SetCell(gridPosX, gridPosY, false);
+        else
+            Grid2.SetCell(gridPosX, gridPosY, false);
+    }
+}
+
+enum class GameMode
+{
+    EDIT = 0,
+    PLAY = 1
+};
 
 int main(void)
 {
@@ -15,7 +65,7 @@ int main(void)
         return -1;
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(720, 720, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Game of Life", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -28,61 +78,62 @@ int main(void)
     if (glewInit() != GLEW_OK)
         std::cout << "ERROR";
 
+    std::random_device device;
+    std::mt19937 rng(device());
 
-    float vertexData[] = {
-        -1.0f, -1.0f,
-        1.0f, -1.0f,
-        1.0f, 1.0f,
-        -1.0f, 1.0f
-    };
+    std::uniform_int_distribution<std::mt19937::result_type> RandomBool(0, 9);
 
-    GLuint vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
+    GameMode currentMode = GameMode::EDIT;
+    std::cout << "EDIT MODE\n";
 
-    GLuint vb;
-    glGenBuffers(1, &vb);
-    glBindBuffer(GL_ARRAY_BUFFER, vb);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 2, vertexData, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
-
-
+    Grid1.Clear();
+    Grid2.Clear();
     
-    unsigned int indices[] = {
-        0, 1, 2,
-        2, 3, 0
-    };
-
-    GLuint ib;
-    glGenBuffers(1, &ib);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 2 * 3, indices, GL_STATIC_DRAW);
-
     GLuint shader = CreateShader("E:/Repos/Graphics/Conway's Game of Life/res/shaders/Basic.glsl");
     glUseProgram(shader);
 
-    GLuint H_loc = glGetUniformLocation(shader, "H");
-    GLuint W_loc = glGetUniformLocation(shader, "W");
-    
-    glUniform1f(H_loc, 720.0f);
-    glUniform1f(W_loc, 720.0f);
-
-    Grid newGrid(10, 10);
-    newGrid.Clear();
-    newGrid.SetCell(9, 5, true);
-    newGrid.Print();
-
-
+    glfwSetCursorPosCallback(window, mouse_pos_callback);
+    glfwSetMouseButtonCallback(window, mouse_click_callback);
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+        if(currentMode == GameMode::EDIT)
+        {
+            Grid1.Render();
+            
+            if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+            {
+               currentMode = GameMode::PLAY;
+            } 
+        }
+        else if(currentMode == GameMode::PLAY)
+        {
+            if(nowRenderingGrid == 1)
+            {
+                Grid1.Render();
+                Grid2.ConwayMutate(Grid1);
+                nowRenderingGrid = 2;
+            }
+            else if(nowRenderingGrid == 2)
+            {
+                Grid2.Render();
+                Grid1.ConwayMutate(Grid2);
+                nowRenderingGrid = 1;
+            }
+            else
+            {
+                std::cout << "very bad error occured\n";
+            }   
+        }
 
+        Sleep(100);
+        
+        if(glfwGetKey(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS)
+            std::cout << "Mouse 1 pressed\n";
+        
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
 
