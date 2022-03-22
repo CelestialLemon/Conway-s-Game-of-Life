@@ -11,11 +11,11 @@
 ## Demo
 
 ### R-Pentomino
-![R-Pentomino]("https://i.ibb.co/17m0Cjv/Game-of-Life-2022-03-22-16-27-31.gif")
+[R-Pentomino]("https://i.ibb.co/17m0Cjv/Game-of-Life-2022-03-22-16-27-31.gif")
 
 
 ### Reflector
-![Reflector]("https://i.ibb.co/fYB2FPH/Game-of-Life-2022-03-22-16-55-43.gif")
+[Reflector]("https://i.ibb.co/fYB2FPH/Game-of-Life-2022-03-22-16-55-43.gif")
 
 ### Glider Gun
-![Glider Gun]("https://i.ibb.co/3f6YTSb/Game-of-Life-2022-03-22-16-59-23.gif")
+[Glider Gun]("https://i.ibb.co/3f6YTSb/Game-of-Life-2022-03-22-16-59-23.gif")
